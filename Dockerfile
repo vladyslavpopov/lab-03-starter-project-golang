@@ -1,15 +1,14 @@
 FROM golang:1.18-bullseye AS builder
-
 WORKDIR /usr/src/app
-
 COPY go.mod go.sum ./
 RUN go mod download
-
 COPY . .
-RUN go build -o app-binary .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app-binary .
 
-FROM golang:1.18-bullseye
+FROM scratch
 WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app/app-binary .
+
 EXPOSE 8080
-CMD ["./app-binary"]
+ENV ENV_VAR=production
+CMD ["./app-binary", "serve"]
